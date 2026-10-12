@@ -255,7 +255,7 @@ Follow these exact steps to connect your own Firebase project:
    ```
 2. Populate the keys with your credentials from Step 2:
    ```env
-   EXPO_PUBLIC_FIREBASE_API_KEY=AIzaSy...YourKey
+   EXPO_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key_here
    EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=hbplus-intern-portal.firebaseapp.com
    EXPO_PUBLIC_FIREBASE_PROJECT_ID=hbplus-intern-portal
    EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=hbplus-intern-portal.firebasestorage.app
