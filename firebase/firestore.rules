@@ -1,0 +1,53 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny-all fallback for complete backend defense-in-depth
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper: Validates that the request is authenticated via Firebase Auth
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    // Helper: Validates that the authenticated email is verified and strictly ends with @hbplus.fit
+    function isHbPlusAuthorized() {
+      return isAuthenticated()
+        && request.auth.token.email != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.matches('(?i)^[a-zA-Z0-9._%+-]+@hbplus[.]fit$');
+    }
+
+    // Helper: Enforces user record isolation so a user can only read/write their own document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Helper: Validates profile fields on document creation or update
+    function isValidProfileData(userId) {
+      let data = request.resource.data;
+      return data.uid == userId
+        && data.email == request.auth.token.email
+        && data.domain == 'hbplus.fit'
+        // Prevent users from assigning themselves administrative role
+        && (!('role' in data) || data.role == 'user')
+        && (!('isAdmin' in data) || data.isAdmin == false);
+    }
+
+    // Protected User Profile Collection: users/{userId}
+    match /users/{userId} {
+      // Authorized HB+ users can only read their own private profile
+      allow read: if isOwner(userId) && isHbPlusAuthorized();
+
+      // Authorized HB+ users can only write their own profile with validated schema
+      allow create, update: if isOwner(userId)
+        && isHbPlusAuthorized()
+        && isValidProfileData(userId);
+
+      // Deletions are restricted
+      allow delete: if false;
+    }
+  }
+}
